@@ -1,24 +1,34 @@
 import React from 'react';
-import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
 
 const BottomBar = () => (
   <View style={styles.bar}>
-    <TouchableOpacity>
-      <Image source={require('../assets/football.png')} style={styles.ball} />
-    </TouchableOpacity>
-    <TouchableOpacity>
-      <Image source={require('../assets/plus.png')} style={styles.plus} />
-    </TouchableOpacity>
-    <TouchableOpacity>
-      <Image source={require('../assets/bell.png')} style={styles.bell} />
-    </TouchableOpacity>
+    <View style={styles.iconContainer}>
+      <TouchableOpacity>
+        <Image source={require('../assets/football.png')} style={styles.ball} />
+      </TouchableOpacity>
+      <Text style={styles.label}>Mis partidos</Text>
+    </View>
+    <View style={styles.iconContainer}>
+      <TouchableOpacity>
+        <Image source={require('../assets/plus.png')} style={styles.plus} />
+      </TouchableOpacity>
+      <Text style={styles.label}>Crear partido</Text>
+    </View>
+    <View style={styles.iconContainer}>
+      <TouchableOpacity>
+        <Image source={require('../assets/bell.png')} style={styles.bell} />
+      </TouchableOpacity>
+      <Text style={styles.label}>Notificaciones</Text>
+    </View>
   </View>
 );
+
 
 const styles = StyleSheet.create({
   bar: {
     height: 100,
-    backgroundColor: '#C7CD7A',
+    backgroundColor: '#b3b86bff',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -28,9 +38,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   ball: {
-    width: 32,
-    height: 32,
+    width: 39,
+    height: 39,
   },
   bell: {
     width: 40,
@@ -39,6 +53,11 @@ const styles = StyleSheet.create({
   plus: {
     width: 40,
     height: 40,
+  },
+  label: {
+    fontSize: 12,
+    color: '#082512',
+    marginTop: 4,
   },
 });
 
