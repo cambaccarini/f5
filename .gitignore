@@ -35,3 +35,30 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+# Ignorar archivos de entorno
+.env
+.env.*
+.env.local
+
+# Ignorar archivos de configuración personales
+*.config.js
+*.config.json
+
+# Ignorar archivos de credenciales
+credentials.json
+secrets.json
+
+# Ignorar archivos de base de datos locales
+*.sqlite
+*.db
+# Ignorar archivos de logs
+*.log
+
+# Ignorar archivos de backup
+*.bak
+*.tmp
+
+# Ignorar archivos de usuario de IDE
+.vscode/
+.idea/
+*.swp
