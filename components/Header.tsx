@@ -21,11 +21,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#082512',
   },
   header: {
-    height: 150,
+    height: 120,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
+    paddingTop: 30,
   },
   menu: {
     width: 50,
