@@ -4,31 +4,40 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { db } from '../firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../Navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RegisterUser = () => {
-const [name, setName] = useState('');
-const [lastName, setLastName] = useState('');
-const [phoneNumber, setPhoneNumber] = useState('');
-const [age, setAge] = useState('');
-//const [profileImage, setProfileImage] = useState<string | null>(null);
-const profileImage = null;
+  const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [age, setAge] = useState('');
+  // const [profileImage, setProfileImage] = useState<string | null>(null);
+  const profileImage = null;
 
-const handleRegister = async () => {
-  try {
-    await addDoc(collection(db, 'users'), {
-      name,
-      lastName,
-      phoneNumber,
-      age,
-      //avatarUrl: profileImage || null, 
-      avatarUrl: profileImage,
-   });
-    alert('Usuario registrado');
-  } catch (error) {
-    alert('Error al registrar usuario');
-    console.error(error);
-  }
-};
+const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'RegisterUser'>>();
+  const handleRegister = async () => {
+    try {
+      const docRef = await addDoc(collection(db, 'users'), {
+        name,
+        lastName,
+        phoneNumber,
+        age,
+        avatarUrl: profileImage,
+      });
+      await AsyncStorage.setItem('userId', docRef.id);
+      alert('Usuario registrado');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
+    } catch (error) {
+      alert('Error al registrar usuario');
+      console.error(error);
+    }
+  };
 
 const handlePickImage = async () => {
 /*  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
