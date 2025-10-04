@@ -7,3 +7,4 @@ export interface User {
   avatarUrl?: string;
 }
 //chequear tipos de Datos, opcionales, ¿avatar?
+// falta username/mail y contraseña

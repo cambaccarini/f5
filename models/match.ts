@@ -10,3 +10,4 @@ export interface Match {
 }
 
 //chequear tipos de Datos, opcionales, ¿descripcion?
+//agregar lo de mixto/fem/masc

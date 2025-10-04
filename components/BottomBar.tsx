@@ -1,7 +1,12 @@
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { View, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../Navigation';
 
-const BottomBar = () => (
+const BottomBar = () => {
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    return(
   <View style={styles.bar}>
     <View style={styles.iconContainer}>
       <TouchableOpacity>
@@ -10,7 +15,7 @@ const BottomBar = () => (
       <Text style={styles.label}>Mis partidos</Text>
     </View>
     <View style={styles.iconContainer}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('CreateMatch')}>
         <Image source={require('../assets/plus.png')} style={styles.plus} />
       </TouchableOpacity>
       <Text style={styles.label}>Crear partido</Text>
@@ -23,7 +28,7 @@ const BottomBar = () => (
     </View>
   </View>
 );
-
+};
 
 const styles = StyleSheet.create({
   bar: {
