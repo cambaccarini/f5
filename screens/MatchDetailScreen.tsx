@@ -11,6 +11,25 @@ import { updateDoc } from 'firebase/firestore';
 
 type MatchDetailRouteProp = RouteProp<RootStackParamList, 'MatchDetail'>;
 
+const formatDateToDDMMYYYY = (value?: string) => {
+  if (!value) {
+    return '';
+  }
+
+  const ddmmyyyy = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  if (ddmmyyyy.test(value)) {
+    return value;
+  }
+
+  const yyyymmdd = /^(\d{4})-(\d{2})-(\d{2})$/;
+  const parsed = value.match(yyyymmdd);
+  if (parsed) {
+    return `${parsed[3]}/${parsed[2]}/${parsed[1]}`;
+  }
+
+  return value;
+};
+
 const MatchDetailScreen = () => {
   const route = useRoute<MatchDetailRouteProp>();
   const { matchId } = route.params;
@@ -37,7 +56,12 @@ const MatchDetailScreen = () => {
     );
   }
 
-    const handleJoinMatch = async () => {
+  const formattedDate = formatDateToDDMMYYYY(match.date);
+  const dateLabel = formattedDate && match.time
+    ? `${formattedDate} ${match.time}`
+    : formattedDate || match.time || 'Sin fecha';
+
+  const handleJoinMatch = async () => {
     const userId = await AsyncStorage.getItem('userId');
     if (!userId) {
       alert('Debes iniciar sesión');
@@ -67,7 +91,7 @@ const MatchDetailScreen = () => {
         <Text style={styles.title}>{match.title}</Text>
         <View style={styles.row}>
           <MaterialIcons name="calendar-today" size={28} color="#082512" style={styles.icon} />
-          <Text style={styles.text}>{match.dateTime || 'Sin fecha'}</Text>
+        <Text style={styles.text}>{dateLabel}</Text>        
         </View>
         <View style={styles.row}>
           <MaterialIcons name="location-on" size={28} color="#082512" style={styles.icon} />

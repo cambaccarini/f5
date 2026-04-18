@@ -1,7 +1,8 @@
 export interface Match {
   id: string;
   title: string;
-  dateTime?: Date;
+  date?: string; // formato DD/MM/AAAA 
+  time?: string; // formato HH:MM
   location?: string;
   description?: string;
   players: string[]; // array de IDs de usuarios

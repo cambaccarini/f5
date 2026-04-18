@@ -8,9 +8,28 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../Navigation';
 import Layout from '../components/Layout';
 
+const isValidDateFormat = (value: string) => {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) {
+    return false;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const candidate = new Date(year, month - 1, day);
+
+  return (
+    candidate.getFullYear() === year &&
+    candidate.getMonth() === month - 1 &&
+    candidate.getDate() === day
+  );
+};
+
 const CreateMatchScreen = () => {
   const [title, setTitle] = useState('');
-  const [dateTime, setDateTime] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [requiredPlayers, setRequiredPlayers] = useState('');
@@ -18,6 +37,13 @@ const CreateMatchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handleCreateMatch = async () => {
+    const normalizedDate = date.trim();
+
+    if (!isValidDateFormat(normalizedDate)) {
+      alert('La fecha debe tener formato DD/MM/AAAA');
+      return;
+    }
+
     try {
       const organizerId = await AsyncStorage.getItem('userId');
       if (!organizerId) {
@@ -26,7 +52,8 @@ const CreateMatchScreen = () => {
       }
       await addDoc(collection(db, 'matches'), {
         title,
-        dateTime,
+        date: normalizedDate,
+        time,
         location,
         description,
         requiredPlayers: Number(requiredPlayers),
@@ -53,9 +80,15 @@ const CreateMatchScreen = () => {
         />
         <TextInput
           style={styles.input}
-          placeholder="Fecha y hora (ej: 2025-10-10 18:00)"
-          value={dateTime}
-          onChangeText={setDateTime}
+          placeholder="Fecha (ej: 18/04/2026)"
+          value={date}
+          onChangeText={setDate}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Hora (ej: 18:30)"
+          value={time}
+          onChangeText={setTime}
         />
         <TextInput
           style={styles.input}
