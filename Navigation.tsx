@@ -7,12 +7,16 @@ import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen'; 
 import CreateMatchScreen from './screens/CreateMatchScreen';
 import MatchDetailScreen from './screens/MatchDetailScreen';
+import MyMatchesScreen from './screens/MyMatchesScreen';
+import NotificationsScreen from './screens/NotificationsScreen';
 
 export type RootStackParamList = {
   AuthLoading: undefined;
   Login: undefined;
   RegisterUser: undefined;
   Home: undefined;
+  MyMatches: undefined;
+  Notifications: undefined;
   CreateMatch: undefined;
   MatchDetail: { matchId: string };
 };
@@ -26,6 +30,8 @@ const Navigation = () => (
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="RegisterUser" component={RegisterUser} />
       <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="MyMatches" component={MyMatchesScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="CreateMatch" component={CreateMatchScreen} />
       <Stack.Screen name="MatchDetail" component={MatchDetailScreen} />
     </Stack.Navigator>

@@ -9,7 +9,7 @@ const BottomBar = () => {
     return(
   <View style={styles.bar}>
     <View style={styles.iconContainer}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('MyMatches')}>
         <Image source={require('../assets/football.png')} style={styles.ball} />
       </TouchableOpacity>
       <Text style={styles.label}>Mis partidos</Text>
@@ -21,7 +21,7 @@ const BottomBar = () => {
       <Text style={styles.label}>Crear partido</Text>
     </View>
     <View style={styles.iconContainer}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
         <Image source={require('../assets/bell.png')} style={styles.bell} />
       </TouchableOpacity>
       <Text style={styles.label}>Notificaciones</Text>

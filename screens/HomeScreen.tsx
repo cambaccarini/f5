@@ -6,6 +6,7 @@ import { db } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../Navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 interface Match {
@@ -16,6 +17,7 @@ interface Match {
   location?: string;
   requiredPlayers: number;
   players: string[];
+  organizerId?: string;
 }
 
 const formatDateToDDMMYYYY = (value?: string) => {
@@ -39,6 +41,7 @@ const formatDateToDDMMYYYY = (value?: string) => {
 
 const HomeScreen = () => {
   const [matches, setMatches] = useState<Match[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   useEffect(() => {
     const fetchMatches = async () => {
@@ -49,6 +52,13 @@ const HomeScreen = () => {
       })) as Match[];
       setMatches(data);
     };
+
+    const fetchCurrentUser = async () => {
+      const userId = await AsyncStorage.getItem('userId');
+      setCurrentUserId(userId);
+    };
+
+    fetchCurrentUser();
     fetchMatches();
   }, []);
  const renderMatch = ({ item }: { item: Match }) => {
@@ -56,10 +66,13 @@ const HomeScreen = () => {
     const dateLabel = formattedDate && item.time
       ? `${formattedDate} ${item.time}`
       : formattedDate || item.time || 'Sin fecha';
+   const remainingPlayers = Math.max(item.requiredPlayers - (item.players?.length || 0), 0);
+   const isFull = remainingPlayers === 0;
+  const isOwnMatch = !!currentUserId && item.organizerId === currentUserId;
 
     return (
     <TouchableOpacity
-      style={styles.matchBar}
+      style={[styles.matchBar, isOwnMatch && styles.ownMatchBar]}
       onPress={() => navigation.navigate('MatchDetail', { matchId: item.id })}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -69,9 +82,17 @@ const HomeScreen = () => {
           <Text style={styles.matchSub}>{item.location}</Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={styles.matchSmall}>Faltan</Text>
-          <Text style={styles.matchBig}>{item.requiredPlayers - (item.players?.length || 0)}</Text>
-          <Text style={[styles.matchSmall, { color: '#082512', fontWeight: 'bold' }]}>Sumarse</Text>
+          {isFull ? (
+            <Text style={[styles.matchBig, { fontSize: 16 }]}>Partido completo</Text>
+          ) : isOwnMatch ? (
+            <Text style={[styles.matchBig, { fontSize: 16 }]}>Partido propio</Text>
+          ) : (
+            <>
+              <Text style={styles.matchSmall}>Faltan</Text>
+              <Text style={styles.matchBig}>{remainingPlayers}</Text>
+              <Text style={[styles.matchSmall, { color: '#082512', fontWeight: 'bold' }]}>Sumarse</Text>
+            </>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -102,12 +123,16 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     minHeight: 70,
     justifyContent: 'center',
-    // Sombra opcional:
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  ownMatchBar: {
+    backgroundColor: '#c9f37a',
+    borderWidth: 1,
+    borderColor: '#82a04d',
   },
   matchTitle: {
     fontWeight: 'bold',

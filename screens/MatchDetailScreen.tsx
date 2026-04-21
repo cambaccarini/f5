@@ -34,15 +34,43 @@ const MatchDetailScreen = () => {
   const route = useRoute<MatchDetailRouteProp>();
   const { matchId } = route.params;
   const [match, setMatch] = useState<any>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [organizerFullName, setOrganizerFullName] = useState('');
 
   useEffect(() => {
     const fetchMatch = async () => {
       const docRef = doc(db, 'matches', matchId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setMatch({ id: docSnap.id, ...docSnap.data() });
+        const matchData = { id: docSnap.id, ...docSnap.data() } as any;
+        setMatch(matchData);
+
+        if (matchData.organizerId) {
+          const organizerRef = doc(db, 'users', matchData.organizerId);
+          const organizerSnap = await getDoc(organizerRef);
+
+          if (organizerSnap.exists()) {
+            const organizerData = organizerSnap.data() as { name?: string; lastName?: string };
+            const fullName = [organizerData.name, organizerData.lastName]
+              .filter(Boolean)
+              .join(' ')
+              .trim();
+            setOrganizerFullName(fullName || 'Organizador desconocido');
+          } else {
+            setOrganizerFullName('Organizador desconocido');
+          }
+        } else {
+          setOrganizerFullName('Organizador desconocido');
+        }
       }
     };
+
+    const fetchCurrentUser = async () => {
+      const userId = await AsyncStorage.getItem('userId');
+      setCurrentUserId(userId);
+    };
+
+    fetchCurrentUser();
     fetchMatch();
   }, [matchId]);
 
@@ -60,8 +88,22 @@ const MatchDetailScreen = () => {
   const dateLabel = formattedDate && match.time
     ? `${formattedDate} ${match.time}`
     : formattedDate || match.time || 'Sin fecha';
+  const currentPlayers = match.players?.length || 0;
+  const remainingPlayers = Math.max((match.requiredPlayers || 0) - currentPlayers, 0);
+  const isFull = remainingPlayers === 0;
+  const isOwnMatch = !!currentUserId && match.organizerId === currentUserId;
 
   const handleJoinMatch = async () => {
+    if (isOwnMatch) {
+      alert('No puedes sumarte a un partido que creaste');
+      return;
+    }
+
+    if (isFull) {
+      alert('El partido ya está completo');
+      return;
+    }
+
     const userId = await AsyncStorage.getItem('userId');
     if (!userId) {
       alert('Debes iniciar sesión');
@@ -99,15 +141,22 @@ const MatchDetailScreen = () => {
         </View>
         <View style={styles.row}>
           <Image source={require('../assets/user.png')} style={styles.icon} />
-          <Text style={styles.text}>Organiza: {match.organizerName || match.organizerId}</Text>
+          <Text style={styles.text}>Organiza: {organizerFullName}</Text>
         </View>
         <View style={styles.row}>
           <FontAwesome5 name="users" size={26} color="#082512" style={styles.icon} />
-          <Text style={styles.text}>Hay {match.players?.length || 0} de {match.requiredPlayers} jugadores</Text>
+          <Text style={styles.text}>Hay {currentPlayers} de {match.requiredPlayers} jugadores</Text>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleJoinMatch}>
-          <Text style={styles.buttonText}>Sumarse</Text>
-        </TouchableOpacity>
+        {isOwnMatch ? (
+          <Text style={styles.fullText}></Text>
+          //aca puedo poner partido propio o algo asi
+        ) : isFull ? (
+          <Text style={styles.fullText}>Partido completo</Text>
+        ) : (
+          <TouchableOpacity style={styles.button} onPress={handleJoinMatch}>
+            <Text style={styles.buttonText}>Sumarse</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </Layout>
   );
@@ -153,6 +202,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  fullText: {
+    marginTop: 32,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#082512',
   },
 });
 
