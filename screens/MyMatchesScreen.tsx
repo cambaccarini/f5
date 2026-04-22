@@ -54,8 +54,17 @@ const MyMatchesScreen = () => {
         ...doc.data(),
       })) as Match[];
 
-      const ownMatches = allMatches.filter(match => match.organizerId === userId);
-      setMatches(ownMatches);
+      const myMatches = allMatches.filter(match => {
+        if (!userId) {
+          return false;
+        }
+
+        const isOwnMatch = match.organizerId === userId;
+        const isJoinedMatch = (match.players || []).includes(userId);
+        return isOwnMatch || isJoinedMatch;
+      });
+
+      setMatches(myMatches);
     };
 
     fetchData();
@@ -69,10 +78,11 @@ const MyMatchesScreen = () => {
 
     const remainingPlayers = Math.max(item.requiredPlayers - (item.players?.length || 0), 0);
     const isFull = remainingPlayers === 0;
+    const isOwnMatch = !!currentUserId && item.organizerId === currentUserId;
 
     return (
       <TouchableOpacity
-        style={styles.matchBar}
+        style={[styles.matchBar, isOwnMatch && styles.ownMatchBar]}
         onPress={() => navigation.navigate('MatchDetail', { matchId: item.id })}
       >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -103,7 +113,7 @@ const MyMatchesScreen = () => {
       <View style={styles.container}>
         <Text style={styles.title}>Mis partidos</Text>
         {currentUserId && matches.length === 0 ? (
-          <Text style={styles.emptyText}>Aun no creaste partidos.</Text>
+          <Text style={styles.emptyText}>Aun no tenes partidos.</Text>
         ) : (
           <FlatList
             data={matches}
@@ -134,9 +144,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   matchBar: {
-    backgroundColor: '#c9f37a',
-    borderWidth: 1,
-    borderColor: '#82a04d',
+    backgroundColor: '#e9eac7',
     borderRadius: 10,
     padding: 14,
     marginBottom: 18,
@@ -147,6 +155,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  ownMatchBar: {
+    backgroundColor: '#c9f37a',
+    borderWidth: 1,
+    borderColor: '#82a04d',
   },
   matchTitle: {
     fontWeight: 'bold',
