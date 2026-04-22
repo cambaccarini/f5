@@ -20,8 +20,10 @@ interface NotificationItem {
   id: string;
   matchId: string;
   matchTitle: string;
-  playerName: string;
+  type: 'player_joined' | 'match_completed';
+  playerName?: string;
   remainingPlayers: number;
+  createdAt: number;
 }
 
 const NotificacionesScreen = () => {
@@ -45,14 +47,24 @@ const NotificacionesScreen = () => {
         })) as Match[];
 
         const ownMatches = allMatches.filter(match => match.organizerId === userId);
+        const notificationsStorageKey = `notifications:${userId}`;
+        const storedNotificationsRaw = await AsyncStorage.getItem(notificationsStorageKey);
+        const storedNotifications: NotificationItem[] = storedNotificationsRaw
+          ? JSON.parse(storedNotificationsRaw)
+          : [];
+        const storedById = new Map(storedNotifications.map(notification => [notification.id, notification]));
         const builtNotifications: NotificationItem[] = [];
+        let orderSeed = Date.now();
 
         for (const match of ownMatches) {
           const playersJoined = (match.players || []).filter(playerId => playerId !== userId);
           const remainingPlayers = Math.max(match.requiredPlayers - (match.players?.length || 0), 0);
 
-          for (const playerId of playersJoined) {
+          for (let index = 0; index < playersJoined.length; index += 1) {
+            const playerId = playersJoined[index];
             let playerName = 'Un jugador';
+            const remainingPlayersAtJoin = Math.max(match.requiredPlayers - (index + 2), 0);
+            const notificationId = `${match.id}-${playerId}`;
 
             try {
               const userRef = doc(db, 'users', playerId);
@@ -68,16 +80,60 @@ const NotificacionesScreen = () => {
               console.error('Error al obtener usuario de notificacion:', error);
             }
 
-            builtNotifications.push({
-              id: `${match.id}-${playerId}`,
-              matchId: match.id,
-              matchTitle: match.title,
-              playerName,
-              remainingPlayers,
-            });
+            const storedNotification = storedById.get(notificationId);
+
+            if (storedNotification) {
+              builtNotifications.push({
+                ...storedNotification,
+                matchTitle: match.title,
+              });
+            } else {
+              builtNotifications.push({
+                id: notificationId,
+                matchId: match.id,
+                matchTitle: match.title,
+                type: 'player_joined',
+                playerName,
+                remainingPlayers: remainingPlayersAtJoin,
+                createdAt: orderSeed,
+              });
+              orderSeed += 1;
+            }
+          }
+
+          if (remainingPlayers === 0 && playersJoined.length > 0) {
+            const notificationId = `${match.id}-completed`;
+            const storedNotification = storedById.get(notificationId);
+
+            if (storedNotification) {
+              builtNotifications.push({
+                ...storedNotification,
+                matchTitle: match.title,
+              });
+            } else {
+              builtNotifications.push({
+                id: notificationId,
+                matchId: match.id,
+                matchTitle: match.title,
+                type: 'match_completed',
+                remainingPlayers,
+                createdAt: orderSeed,
+              });
+              orderSeed += 1;
+            }
           }
         }
 
+        builtNotifications.sort((a, b) => b.createdAt - a.createdAt);
+        await AsyncStorage.setItem(notificationsStorageKey, JSON.stringify(builtNotifications));
+
+        const readNotificationsKey = `readNotificationIds:${userId}`;
+        const currentNotificationIds = builtNotifications.map(notification => notification.id);
+        const readNotificationsRaw = await AsyncStorage.getItem(readNotificationsKey);
+        const readNotificationIds: string[] = readNotificationsRaw ? JSON.parse(readNotificationsRaw) : [];
+        const mergedReadNotificationIds = Array.from(new Set([...readNotificationIds, ...currentNotificationIds]));
+
+        await AsyncStorage.setItem(readNotificationsKey, JSON.stringify(mergedReadNotificationIds));
         setNotifications(builtNotifications);
       } catch (error) {
         console.error('Error al cargar notificaciones:', error);
@@ -95,8 +151,18 @@ const NotificacionesScreen = () => {
       onPress={() => navigation.navigate('MatchDetail', { matchId: item.matchId })}
     >
       <Text style={styles.notificationTitle}>{item.matchTitle}</Text>
-      <Text style={styles.notificationText}>{item.playerName} se sumó a tu partido</Text>
-      <Text style={styles.notificationText}>Faltan {item.remainingPlayers} jugadores</Text>
+      {item.type === 'match_completed' ? (
+        <Text style={styles.notificationText}>Tu partido está completo</Text>
+      ) : (
+        <Text style={styles.notificationText}>{item.playerName} se sumó a tu partido</Text>
+      )}
+      {item.type === 'player_joined' ? (
+        <Text style={styles.notificationText}>
+          {item.remainingPlayers === 0
+            ? 'Ya no faltan jugadores'
+            : `${item.remainingPlayers === 1 ? 'Falta' : 'Faltan'} ${item.remainingPlayers} ${item.remainingPlayers === 1 ? 'jugador' : 'jugadores'}`}
+        </Text>
+      ) : null}
     </TouchableOpacity>
   );
 

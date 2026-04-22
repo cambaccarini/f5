@@ -86,7 +86,7 @@ const MyMatchesScreen = () => {
               <Text style={[styles.matchBig, { fontSize: 16 }]}>Partido completo</Text>
             ) : (
               <>
-                <Text style={styles.matchSmall}>Faltan</Text>
+                <Text style={styles.matchSmall}>{remainingPlayers === 1 ? 'Falta' : 'Faltan'}</Text>
                 <Text style={styles.matchBig}>{remainingPlayers}</Text>
                 <Text style={[styles.matchSmall, { color: '#082512', fontWeight: 'bold' }]}></Text>
               </>
