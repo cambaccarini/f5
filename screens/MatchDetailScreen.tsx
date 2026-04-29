@@ -11,6 +11,13 @@ import { updateDoc } from 'firebase/firestore';
 
 type MatchDetailRouteProp = RouteProp<RootStackParamList, 'MatchDetail'>;
 
+type JoinedPlayer = {
+  id: string;
+  name: string;
+  lastName: string;
+  phoneNumber: string;
+};
+
 const formatDateToDDMMYYYY = (value?: string) => {
   if (!value) {
     return '';
@@ -36,6 +43,9 @@ const MatchDetailScreen = () => {
   const [match, setMatch] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [organizerFullName, setOrganizerFullName] = useState('');
+  const [organizerPhoneNumber, setOrganizerPhoneNumber] = useState('');
+  const [joinedPlayers, setJoinedPlayers] = useState<JoinedPlayer[]>([]);
+  const [showJoinedPlayers, setShowJoinedPlayers] = useState(false);
 
   useEffect(() => {
     const fetchMatch = async () => {
@@ -50,17 +60,20 @@ const MatchDetailScreen = () => {
           const organizerSnap = await getDoc(organizerRef);
 
           if (organizerSnap.exists()) {
-            const organizerData = organizerSnap.data() as { name?: string; lastName?: string };
+            const organizerData = organizerSnap.data() as { name?: string; lastName?: string; phoneNumber?: string };
             const fullName = [organizerData.name, organizerData.lastName]
               .filter(Boolean)
               .join(' ')
               .trim();
             setOrganizerFullName(fullName || 'Organizador desconocido');
+            setOrganizerPhoneNumber(organizerData.phoneNumber || 'Sin teléfono');
           } else {
             setOrganizerFullName('Organizador desconocido');
+            setOrganizerPhoneNumber('Sin teléfono');
           }
         } else {
           setOrganizerFullName('Organizador desconocido');
+          setOrganizerPhoneNumber('Sin teléfono');
         }
       }
     };
@@ -74,6 +87,65 @@ const MatchDetailScreen = () => {
     fetchMatch();
   }, [matchId]);
 
+  useEffect(() => {
+    const fetchJoinedPlayers = async () => {
+      if (!currentUserId || !match || match.organizerId !== currentUserId) {
+        setJoinedPlayers([]);
+        setShowJoinedPlayers(false);
+        return;
+      }
+
+      if (!match?.players || !Array.isArray(match.players)) {
+        setJoinedPlayers([]);
+        return;
+      }
+
+      const playerIds = match.players.filter((playerId: string) => playerId !== match.organizerId);
+      if (playerIds.length === 0) {
+        setJoinedPlayers([]);
+        return;
+      }
+
+      try {
+        const playersData = await Promise.all(
+          playerIds.map(async (playerId: string) => {
+            const playerRef = doc(db, 'users', playerId);
+            const playerSnap = await getDoc(playerRef);
+
+            if (!playerSnap.exists()) {
+              return {
+                id: playerId,
+                name: 'Jugador',
+                lastName: 'desconocido',
+                phoneNumber: 'Sin teléfono',
+              };
+            }
+
+            const playerData = playerSnap.data() as {
+              name?: string;
+              lastName?: string;
+              phoneNumber?: string;
+            };
+
+            return {
+              id: playerId,
+              name: playerData.name || 'Jugador',
+              lastName: playerData.lastName || 'desconocido',
+              phoneNumber: playerData.phoneNumber || 'Sin teléfono',
+            };
+          })
+        );
+
+        setJoinedPlayers(playersData);
+      } catch (error) {
+        console.error('Error al obtener jugadores sumados:', error);
+        setJoinedPlayers([]);
+      }
+    };
+
+    fetchJoinedPlayers();
+  }, [match, currentUserId]);
+
   if (!match) {
     return (
       <Layout>
@@ -85,12 +157,12 @@ const MatchDetailScreen = () => {
   }
 
   const formattedDate = formatDateToDDMMYYYY(match.date);
-  const dateLabel = formattedDate && match.time
-    ? `${formattedDate} ${match.time}`
-    : formattedDate || match.time || 'Sin fecha';
+  const dateLabel = formattedDate || 'Sin fecha';
+  const timeLabel = match.time || 'Sin hora';
   const remainingPlayers = Math.max(match.requiredPlayers || 0, 0);
   const isFull = remainingPlayers === 0;
   const isOwnMatch = !!currentUserId && match.organizerId === currentUserId;
+  const playersStatusLabel = isFull ? 'Partido completo' : `Faltan ${remainingPlayers} jugadores`;
 
   const handleJoinMatch = async () => {
     if (isOwnMatch) {
@@ -138,7 +210,11 @@ const MatchDetailScreen = () => {
         <Text style={styles.title}>{match.title}</Text>
         <View style={styles.row}>
           <MaterialIcons name="calendar-today" size={28} color="#082512" style={styles.icon} />
-        <Text style={styles.text}>{dateLabel}</Text>        
+          <Text style={styles.text}>{dateLabel}</Text>
+        </View>
+        <View style={styles.row}>
+          <MaterialIcons name="schedule" size={28} color="#082512" style={styles.icon} />
+          <Text style={styles.text}>{timeLabel}</Text>
         </View>
         <View style={styles.row}>
           <MaterialIcons name="location-on" size={28} color="#082512" style={styles.icon} />
@@ -148,20 +224,42 @@ const MatchDetailScreen = () => {
           <Image source={require('../assets/user.png')} style={styles.icon} />
           <Text style={styles.text}>Organiza: {organizerFullName}</Text>
         </View>
-        <View style={styles.row}>
-          <FontAwesome5 name="users" size={26} color="#082512" style={styles.icon} />
-          <Text style={styles.text}>Faltan {remainingPlayers} jugadores</Text>
-        </View>
+        {!isOwnMatch && (
+          <View style={styles.row}>
+            <MaterialIcons name="phone" size={26} color="#082512" style={styles.icon} />
+            <Text style={styles.text}>Contacta al organizador: {organizerPhoneNumber}</Text>
+          </View>
+        )}
         {isOwnMatch ? (
-          <Text style={styles.fullText}></Text>
-          //aca puedo poner partido propio o algo asi
-        ) : isFull ? (
-          <Text style={styles.fullText}>Partido completo</Text>
+          <TouchableOpacity style={styles.row} onPress={() => setShowJoinedPlayers(prev => !prev)}>
+            <FontAwesome5 name="users" size={26} color="#082512" style={styles.icon} />
+            <Text style={styles.text}>{playersStatusLabel}</Text>
+          </TouchableOpacity>
         ) : (
+          <View style={styles.row}>
+            <FontAwesome5 name="users" size={26} color="#082512" style={styles.icon} />
+            <Text style={styles.text}>{playersStatusLabel}</Text>
+          </View>
+        )}
+        {isOwnMatch && showJoinedPlayers && (
+          <View style={styles.playersListContainer}>
+            <Text style={styles.playersListTitle}>Jugadores sumados:</Text>
+            {joinedPlayers.length === 0 ? (
+              <Text style={styles.playersListItem}>Todavía no se sumó nadie.</Text>
+            ) : (
+              joinedPlayers.map(player => (
+                <Text key={player.id} style={styles.playersListItem}>
+                  {player.name} {player.lastName} - teléfono: {player.phoneNumber}
+                </Text>
+              ))
+            )}
+          </View>
+        )}
+        {!isOwnMatch && !isFull ? (
           <TouchableOpacity style={styles.button} onPress={handleJoinMatch}>
             <Text style={styles.buttonText}>Sumarse</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
     </Layout>
   );
@@ -172,7 +270,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     backgroundColor: '#C7CD7A',
-    alignItems: 'center',         
+    alignItems: 'center',
     justifyContent: 'center',     
   },
   title: {
@@ -184,6 +282,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '100%',
+    maxWidth: 360,
     marginBottom: 14,
   },
   icon: {
@@ -194,6 +294,8 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     color: '#082512',
+    textAlign: 'left',
+    flexShrink: 1,
   },
   button: {
     backgroundColor: '#333',
@@ -213,6 +315,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#082512',
+  },
+  playersListContainer: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: '#e9eac7',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  playersListTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#082512',
+    marginBottom: 8,
+  },
+  playersListItem: {
+    fontSize: 14,
+    color: '#082512',
+    marginBottom: 4,
   },
 });
 
