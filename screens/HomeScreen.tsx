@@ -66,7 +66,7 @@ const HomeScreen = () => {
     const dateLabel = formattedDate && item.time
       ? `${formattedDate} ${item.time}`
       : formattedDate || item.time || 'Sin fecha';
-   const remainingPlayers = Math.max(item.requiredPlayers - (item.players?.length || 0), 0);
+   const remainingPlayers = Math.max(item.requiredPlayers || 0, 0);
    const isFull = remainingPlayers === 0;
   const isOwnMatch = !!currentUserId && item.organizerId === currentUserId;
 
@@ -81,16 +81,22 @@ const HomeScreen = () => {
           <Text style={styles.matchSub}>{dateLabel}</Text>
           <Text style={styles.matchSub}>{item.location}</Text>
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
+        <View style={{ alignItems: 'center' }}>
           {isFull ? (
-            <Text style={[styles.matchBig, { fontSize: 16 }]}>Partido completo</Text>
+            <Text style={[styles.matchBig, { fontSize: 16, textAlign: 'center' }]}>Partido completo</Text>
           ) : isOwnMatch ? (
-            <Text style={[styles.matchBig, { fontSize: 16 }]}>Partido propio</Text>
+            <>
+              <Text style={[styles.matchBig, { fontSize: 16, textAlign: 'center' }]}>Partido propio</Text>
+                <Text style={[styles.matchSmall, { textAlign: 'center' }]}>
+                  {remainingPlayers === 1 ? 'Falta 1 jugador' : `Faltan ${remainingPlayers} jugadores`}
+                </Text>
+            </>
           ) : (
             <>
-              <Text style={styles.matchSmall}>{remainingPlayers === 1 ? 'Falta' : 'Faltan'}</Text>       
-              <Text style={styles.matchBig}>{remainingPlayers}</Text>
-              <Text style={[styles.matchSmall, { color: '#082512', fontWeight: 'bold' }]}>Sumarse</Text>
+                <Text style={[styles.matchBig, { textAlign: 'center' }]}>
+                  {remainingPlayers === 1 ? 'Falta 1 jugador' : `Faltan ${remainingPlayers} jugadores`}
+                </Text>
+                <Text style={[styles.matchBig, { textAlign: 'center' }]}>¡Sumate!</Text>
             </>
           )}
         </View>

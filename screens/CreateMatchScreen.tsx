@@ -104,7 +104,7 @@ const CreateMatchScreen = () => {
         />
         <TextInput
           style={styles.input}
-          placeholder="Cantidad de jugadores"
+          placeholder="Cantidad de jugadores que faltan"
           value={requiredPlayers}
           onChangeText={setRequiredPlayers}
           keyboardType="numeric"

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { collection, getDoc, doc } from 'firebase/firestore';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,27 +10,28 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 const LoginScreen = () => {
-  const [userId, setUserId] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const navigation = useNavigation<NavigationProp>();
   const handleLogin = async () => {
-    if (!userId || !phoneNumber) {
+    if (!username || !password) {
       Alert.alert('Error', 'Completa ambos campos');
       return;
     }
     try {
-      const userRef = doc(collection(db, 'users'), userId);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) {
-        Alert.alert('Error', 'ID no encontrado');
+      const q = query(collection(db, 'users'), where('username', '==', username));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        Alert.alert('Error', 'Usuario no encontrado');
         return;
       }
-      const userData = userSnap.data();
-      if (userData.phoneNumber !== phoneNumber) {
-        Alert.alert('Error', 'Teléfono incorrecto');
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      if (userData.password !== password) {
+        Alert.alert('Error', 'Contraseña incorrecta');
         return;
       }
-      await AsyncStorage.setItem('userId', userId);
+      await AsyncStorage.setItem('userId', userDoc.id);
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' }],
@@ -44,22 +45,23 @@ const LoginScreen = () => {
   return (
     <View style={styles.background}>
       <View style={styles.header}>
-        <Text style={styles.title}>Iniciar sesión</Text>
+        <Image source={require('../assets/logo.png')} style={styles.logo} />
       </View>
       <View style={styles.container}>
+        <Text style={styles.title}>Iniciar sesión</Text>
         <TextInput
           style={styles.input}
-          placeholder="ID de usuario"
-          value={userId}
-          onChangeText={setUserId}
+          placeholder="Nombre de usuario"
+          value={username}
+          onChangeText={setUsername}
           autoCapitalize="none"
         />
         <TextInput
           style={styles.input}
-          placeholder="Teléfono"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          keyboardType="phone-pad"
+          placeholder="Contraseña"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={true}
         />
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Entrar</Text>
@@ -79,23 +81,28 @@ const styles = StyleSheet.create({
   },
   header: {
     width: '100%',
-    height: 140,
+    height: 150,
     backgroundColor: '#082512',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    paddingTop: 30,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   title: {
-    fontSize: 28,
-    color: '#fff',
+    fontSize: 24,
+    color: '#082512',
     fontWeight: 'bold',
-    marginTop: 40,
+    marginBottom: 20,
   },
   container: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginTop: 48,
+    marginTop: 32,
   },
   input: {
     width: '100%',

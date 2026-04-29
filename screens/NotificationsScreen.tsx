@@ -58,12 +58,12 @@ const NotificacionesScreen = () => {
 
         for (const match of ownMatches) {
           const playersJoined = (match.players || []).filter(playerId => playerId !== userId);
-          const remainingPlayers = Math.max(match.requiredPlayers - (match.players?.length || 0), 0);
+          const remainingPlayers = Math.max(match.requiredPlayers || 0, 0);
 
           for (let index = 0; index < playersJoined.length; index += 1) {
             const playerId = playersJoined[index];
             let playerName = 'Un jugador';
-            const remainingPlayersAtJoin = Math.max(match.requiredPlayers - (index + 2), 0);
+            const remainingPlayersAtJoin = Math.max((match.requiredPlayers || 0) + (playersJoined.length - index - 1), 0);
             const notificationId = `${match.id}-${playerId}`;
 
             try {

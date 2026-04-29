@@ -19,7 +19,7 @@ const buildNotificationIds = (matches: Match[], userId: string) => {
 
   for (const match of matches) {
     const playersJoined = (match.players || []).filter(playerId => playerId !== userId);
-    const remainingPlayers = Math.max(match.requiredPlayers - (match.players?.length || 0), 0);
+    const remainingPlayers = Math.max(match.requiredPlayers || 0, 0);
 
     for (const playerId of playersJoined) {
       ids.push(`${match.id}-${playerId}`);

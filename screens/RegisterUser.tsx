@@ -12,20 +12,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const RegisterUser = () => {
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [age, setAge] = useState('');
   // const [profileImage, setProfileImage] = useState<string | null>(null);
   const profileImage = null;
 
 const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'RegisterUser'>>();
-  const handleRegister = async () => {
+  
+const handleRegister = async () => {
     try {
       const docRef = await addDoc(collection(db, 'users'), {
         name,
         lastName,
+        username,
+        password,
         phoneNumber,
         age,
-        avatarUrl: profileImage,
+        //avatarUrl: profileImage,
       });
       await AsyncStorage.setItem('userId', docRef.id);
       alert('Usuario registrado');
@@ -63,21 +68,26 @@ const handlePickImage = async () => {
       </View>
 
       <View style={styles.container}>
-     <View style={styles.avatarContainer}>
+        {/*
+        <View style={styles.avatarContainer}>
           <TouchableOpacity onPress={handlePickImage}>
             <Image
               source={
                 profileImage
                   ? { uri: profileImage }
-                  : require('../assets/user.png') // imagen por defecto
+                  : require('../assets/user.png')
               }
               style={styles.avatar}
             />
+
             <View style={styles.editIcon}>
               <MaterialIcons name="edit" size={20} color="#fff" />
             </View>
           </TouchableOpacity>
         </View>
+        */}
+
+        <Text style={styles.title}>Registro de usuario</Text>
 
         <TextInput
           style={styles.input}
@@ -91,6 +101,19 @@ const handlePickImage = async () => {
           value={lastName}
           onChangeText={setLastName}
         />
+        <TextInput
+        style={styles.input}
+        placeholder="Nombre de usuario"
+        value={username}
+        onChangeText={setUsername}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry={true}
+      />
         <TextInput
           style={styles.input}
           placeholder="Teléfono"
