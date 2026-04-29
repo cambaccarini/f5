@@ -30,7 +30,7 @@ const handleRegister = async () => {
         password,
         phoneNumber,
         age,
-        avatarUrl: profileImage,
+        //avatarUrl: profileImage,
       });
       await AsyncStorage.setItem('userId', docRef.id);
       alert('Usuario registrado');
@@ -68,22 +68,26 @@ const handlePickImage = async () => {
       </View>
 
       <View style={styles.container}>
-     <View style={styles.avatarContainer}>
+        {/*
+        <View style={styles.avatarContainer}>
           <TouchableOpacity onPress={handlePickImage}>
             <Image
               source={
                 profileImage
                   ? { uri: profileImage }
-                  : require('../assets/user.png') // imagen por defecto
+                  : require('../assets/user.png')
               }
               style={styles.avatar}
             />
-            
+
             <View style={styles.editIcon}>
               <MaterialIcons name="edit" size={20} color="#fff" />
             </View>
           </TouchableOpacity>
         </View>
+        */}
+
+        <Text style={styles.title}>Registro de usuario</Text>
 
         <TextInput
           style={styles.input}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
@@ -45,9 +45,10 @@ const LoginScreen = () => {
   return (
     <View style={styles.background}>
       <View style={styles.header}>
-        <Text style={styles.title}>Iniciar sesión</Text>
+        <Image source={require('../assets/logo.png')} style={styles.logo} />
       </View>
       <View style={styles.container}>
+        <Text style={styles.title}>Iniciar sesión</Text>
         <TextInput
           style={styles.input}
           placeholder="Nombre de usuario"
@@ -80,23 +81,28 @@ const styles = StyleSheet.create({
   },
   header: {
     width: '100%',
-    height: 140,
+    height: 150,
     backgroundColor: '#082512',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    paddingTop: 30,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   title: {
-    fontSize: 28,
-    color: '#fff',
+    fontSize: 24,
+    color: '#082512',
     fontWeight: 'bold',
-    marginTop: 40,
+    marginBottom: 20,
   },
   container: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginTop: 48,
+    marginTop: 32,
   },
   input: {
     width: '100%',
