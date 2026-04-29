@@ -88,8 +88,7 @@ const MatchDetailScreen = () => {
   const dateLabel = formattedDate && match.time
     ? `${formattedDate} ${match.time}`
     : formattedDate || match.time || 'Sin fecha';
-  const currentPlayers = match.players?.length || 0;
-  const remainingPlayers = Math.max((match.requiredPlayers || 0) - currentPlayers, 0);
+  const remainingPlayers = Math.max(match.requiredPlayers || 0, 0);
   const isFull = remainingPlayers === 0;
   const isOwnMatch = !!currentUserId && match.organizerId === currentUserId;
 
@@ -115,10 +114,16 @@ const MatchDetailScreen = () => {
     }
     try {
       const matchRef = doc(db, 'matches', matchId);
+      const updatedRequiredPlayers = Math.max((match.requiredPlayers || 0) - 1, 0);
       await updateDoc(matchRef, {
         players: [...match.players, userId],
+        requiredPlayers: updatedRequiredPlayers,
       });
-      setMatch({ ...match, players: [...match.players, userId] });
+      setMatch({
+        ...match,
+        players: [...match.players, userId],
+        requiredPlayers: updatedRequiredPlayers,
+      });
       alert('¡Te sumaste al partido!');
     } catch (error) {
       alert('Error al sumarse');
@@ -145,7 +150,7 @@ const MatchDetailScreen = () => {
         </View>
         <View style={styles.row}>
           <FontAwesome5 name="users" size={26} color="#082512" style={styles.icon} />
-          <Text style={styles.text}>Hay {currentPlayers} de {match.requiredPlayers} jugadores</Text>
+          <Text style={styles.text}>Faltan {remainingPlayers} jugadores</Text>
         </View>
         {isOwnMatch ? (
           <Text style={styles.fullText}></Text>

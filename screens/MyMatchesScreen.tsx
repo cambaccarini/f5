@@ -76,7 +76,7 @@ const MyMatchesScreen = () => {
       ? `${formattedDate} ${item.time}`
       : formattedDate || item.time || 'Sin fecha';
 
-    const remainingPlayers = Math.max(item.requiredPlayers - (item.players?.length || 0), 0);
+    const remainingPlayers = Math.max(item.requiredPlayers || 0, 0);
     const isFull = remainingPlayers === 0;
     const isOwnMatch = !!currentUserId && item.organizerId === currentUserId;
 

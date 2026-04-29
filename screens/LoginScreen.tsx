@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { collection, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,27 +10,28 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 const LoginScreen = () => {
-  const [userId, setUserId] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const navigation = useNavigation<NavigationProp>();
   const handleLogin = async () => {
-    if (!userId || !phoneNumber) {
+    if (!username || !password) {
       Alert.alert('Error', 'Completa ambos campos');
       return;
     }
     try {
-      const userRef = doc(collection(db, 'users'), userId);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) {
-        Alert.alert('Error', 'ID no encontrado');
+      const q = query(collection(db, 'users'), where('username', '==', username));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        Alert.alert('Error', 'Usuario no encontrado');
         return;
       }
-      const userData = userSnap.data();
-      if (userData.phoneNumber !== phoneNumber) {
-        Alert.alert('Error', 'Teléfono incorrecto');
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      if (userData.password !== password) {
+        Alert.alert('Error', 'Contraseña incorrecta');
         return;
       }
-      await AsyncStorage.setItem('userId', userId);
+      await AsyncStorage.setItem('userId', userDoc.id);
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' }],
@@ -49,17 +50,17 @@ const LoginScreen = () => {
       <View style={styles.container}>
         <TextInput
           style={styles.input}
-          placeholder="ID de usuario"
-          value={userId}
-          onChangeText={setUserId}
+          placeholder="Nombre de usuario"
+          value={username}
+          onChangeText={setUsername}
           autoCapitalize="none"
         />
         <TextInput
           style={styles.input}
-          placeholder="Teléfono"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          keyboardType="phone-pad"
+          placeholder="Contraseña"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={true}
         />
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Entrar</Text>

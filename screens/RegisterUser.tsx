@@ -12,17 +12,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const RegisterUser = () => {
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [age, setAge] = useState('');
   // const [profileImage, setProfileImage] = useState<string | null>(null);
   const profileImage = null;
 
 const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'RegisterUser'>>();
-  const handleRegister = async () => {
+  
+const handleRegister = async () => {
     try {
       const docRef = await addDoc(collection(db, 'users'), {
         name,
         lastName,
+        username,
+        password,
         phoneNumber,
         age,
         avatarUrl: profileImage,
@@ -73,6 +78,7 @@ const handlePickImage = async () => {
               }
               style={styles.avatar}
             />
+            
             <View style={styles.editIcon}>
               <MaterialIcons name="edit" size={20} color="#fff" />
             </View>
@@ -91,6 +97,19 @@ const handlePickImage = async () => {
           value={lastName}
           onChangeText={setLastName}
         />
+        <TextInput
+        style={styles.input}
+        placeholder="Nombre de usuario"
+        value={username}
+        onChangeText={setUsername}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry={true}
+      />
         <TextInput
           style={styles.input}
           placeholder="Teléfono"
