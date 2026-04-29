@@ -159,6 +159,7 @@ const MatchDetailScreen = () => {
   const formattedDate = formatDateToDDMMYYYY(match.date);
   const dateLabel = formattedDate || 'Sin fecha';
   const timeLabel = match.time || 'Sin hora';
+  const description = typeof match.description === 'string' ? match.description.trim() : '';
   const remainingPlayers = Math.max(match.requiredPlayers || 0, 0);
   const isFull = remainingPlayers === 0;
   const isOwnMatch = !!currentUserId && match.organizerId === currentUserId;
@@ -220,6 +221,12 @@ const MatchDetailScreen = () => {
           <MaterialIcons name="location-on" size={28} color="#082512" style={styles.icon} />
           <Text style={styles.text}>{match.location || 'Sin ubicación'}</Text>
         </View>
+        {description ? (
+          <View style={styles.row}>
+            <MaterialIcons name="info" size={28} color="#082512" style={styles.icon} />
+            <Text style={styles.text}>{description}</Text>
+          </View>
+        ) : null}
         <View style={styles.row}>
           <Image source={require('../assets/user.png')} style={styles.icon} />
           <Text style={styles.text}>Organiza: {organizerFullName}</Text>
